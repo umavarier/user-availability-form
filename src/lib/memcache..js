@@ -1,17 +1,17 @@
 import Redis from 'ioredis';
 
 const redis = new Redis({
-  host: 'localhost',
-  port: 6379,
+  host: process.env.REDIS_HOST,
+  port: process.env.REDIS_PORT,
   retryStrategy: (times) => {
-    if (times > 10) return null; // Stop retrying after 10 attempts
+    if (times > 10) return null; 
     return Math.min(times * 50, 2000);
   },
-  maxRetriesPerRequest: 10,
+  maxRetriesPerRequest: 3,
   connectTimeout: 5000,
   reconnectOnError: (err) => {
     console.error('Redis connection error:', err);
-    return true; // Try to reconnect
+    return true; 
   }
 });
 

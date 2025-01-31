@@ -146,7 +146,7 @@ export default function AvailabilityForm({ userId, initialSchedule }) {
                         </div>
                     )
                 ))}
-                {/* </div> */}
+               
 
                 <button
                     onClick={handleSave}
