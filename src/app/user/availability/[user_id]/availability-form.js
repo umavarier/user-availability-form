@@ -10,11 +10,6 @@ const defaultTimeSlot = {
     end: '5:00pm'
 };
 
-const defaultDaySchedule = {
-    enabled: true,
-    timeSlots: [{ ...defaultTimeSlot }]
-};
-
 const DAYS = [
     { letter: 'S', full: 'Sunday', enabled: false },
     { letter: 'M', full: 'Monday', enabled: true },
@@ -52,7 +47,6 @@ export default function AvailabilityForm({ userId, initialSchedule }) {
     };
 
     const removeTimeSlot = (day, index) => {
-        console.log(index, "idx")
         setSchedule(prev => ({
             ...prev,
             [day]: {
@@ -92,39 +86,35 @@ export default function AvailabilityForm({ userId, initialSchedule }) {
         }
     };
 
+   
     return (
         <div className="bg-white rounded-lg shadow-md p-6 max-w-xl mx-auto border border-black">
-            {/* Day Toggle Buttons */}
-            <div className="flex  gap-2 mb-8">
+            <div className="flex gap-2 mb-8">
                 {DAYS.map((day) => (
                     <button
                         key={`${day.letter}-${day.full}`}
                         onClick={() => toggleDay(day.full)}
                         className={`w-10 h-10 rounded-full flex items-center justify-center font-medium transition-colors
-              ${schedule[day.full].enabled
-                                ? 'bg-blue-600 text-white'
-                                : 'bg-gray-100 text-gray-500'}`}
+                            ${schedule[day.full].enabled ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-500'}`}
                     >
                         {day.letter}
                     </button>
                 ))}
             </div>
-            
-            <div className="space-y-6 flex flex-col justify-center">
-                {DAYS.map((day) => (
-                    schedule[day.full].enabled && (
-<>
-                        <div className="font-semibold p-2 text-left text-gray-700 min-w-28">{day.full}</div>
-                        <div className="flex flex-col bg-red-300">
-                        <div key={day.full} className="flex gap-4">
-                          
-                            <div className="ml-4 space-y-2 flex">
-                                {schedule[day.full].timeSlots.map((slot, index) => (
-                                    <div key={index} className="flex items-center gap-4 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500">
+
+            <div className="space-y-6">
+                {DAYS.map((dayItem) => (
+                    schedule[dayItem.full].enabled && (
+                        <div key={dayItem.full} className="flex items-start gap-4 mt-4">
+                            <div className="font-semibold text-gray-700 text-left pr-4 mt-6 min-w-36 ">{dayItem.full}</div>
+                            <div className="space-y-4">
+                                {schedule[dayItem.full].timeSlots.map((slot, index) => (
+                                    <div key={index} className="flex items-center gap-4 p-2">
+                                       <div className="flex items-center gap-4 border border-gray-300 rounded-md p-2">
                                         <input
                                             type="text"
                                             value={slot.start}
-                                            onChange={(e) => updateTimeSlot(day.full, index, 'start', e.target.value)}
+                                            onChange={(e) => updateTimeSlot(dayItem.full, index, 'start', e.target.value)}
                                             className="w-24 px-3 py-2"
                                             placeholder="9:00am"
                                         />
@@ -132,32 +122,32 @@ export default function AvailabilityForm({ userId, initialSchedule }) {
                                         <input
                                             type="text"
                                             value={slot.end}
-                                            onChange={(e) => updateTimeSlot(day.full, index, 'end', e.target.value)}
-                                            className="w-24 px-3 py-2"
+                                            onChange={(e) => updateTimeSlot(dayItem.full, index, 'end', e.target.value)}
+                                            className="w-24 px-3 py-2  "
                                             placeholder="5:00pm"
                                         />
-
+                                        </div>
+                                        <button
+                                            onClick={() => addTimeSlot(dayItem.full)}
+                                            className="p-2 text-blue-600 hover:text-blue-700"
+                                        >
+                                            <Plus className="h-4 w-4" />
+                                        </button>
+                                        <button
+                                            onClick={() => removeTimeSlot(dayItem.full, index)}
+                                            disabled={schedule[dayItem.full].timeSlots.length === 1}
+                                            className="p-2 text-gray-500 hover:text-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                                        >
+                                            <Minus className="h-4 w-4" />
+                                        </button>
                                     </div>
                                 ))}
-                                <button
-                                    onClick={() => addTimeSlot(day.full)}
-                                    // className="mt-2 flex items-center text-sm text-blue-600 hover:text-blue-700"
-                                >
-                                    <Plus className="h-4 w-4 mr-1" />
-                                </button>
-                                <button
-                                    onClick={() => removeTimeSlot(day.full, index)}
-                                    disabled={schedule[day.full].timeSlots.length === 1}
-                                    className="p-2 text-gray-500 hover:text-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
-                                >
-                                    <Minus className="h-4 w-4" />
-                                </button>
-                            </div>
                             </div>
                         </div>
-                        </>
                     )
                 ))}
+                {/* </div> */}
+
                 <button
                     onClick={handleSave}
                     disabled={!isValid}
