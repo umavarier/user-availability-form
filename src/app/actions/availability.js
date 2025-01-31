@@ -18,7 +18,7 @@ export async function saveAvailability(userId, schedule) {
   if (!validateSchedule(schedule)) {
     throw new Error('Invalid schedule data');
   }
-
+console.log(schedule, "schedule", userId)
   try {
     await setInCache(`availability:${userId}`, schedule);
     revalidatePath(`/user/availability/${userId}`);

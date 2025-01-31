@@ -3,149 +3,166 @@
 import { useEffect, useState } from 'react';
 import { Plus, Minus, Save } from 'lucide-react';
 import { validateSchedule } from '@/utils/validation';
-import { saveAvailability } from '../../../actions/availability';
+import { saveAvailability } from '@/app/actions/availability';
 
 const defaultTimeSlot = {
-  start: '9:00am',
-  end: '5:00pm'
+    start: '9:00am',
+    end: '5:00pm'
 };
 
 const defaultDaySchedule = {
-  enabled: true,
-  timeSlots: [{ ...defaultTimeSlot }]
+    enabled: true,
+    timeSlots: [{ ...defaultTimeSlot }]
 };
 
-const defaultSchedule = {
-  Monday: { ...defaultDaySchedule },
-  Tuesday: { ...defaultDaySchedule },
-  Wednesday: { ...defaultDaySchedule },
-  Thursday: { ...defaultDaySchedule },
-  Friday: { ...defaultDaySchedule },
-  Saturday: { ...defaultDaySchedule, enabled: false },
-  Sunday: { ...defaultDaySchedule, enabled: false }
-};
+const DAYS = [
+    { letter: 'S', full: 'Sunday', enabled: false },
+    { letter: 'M', full: 'Monday', enabled: true },
+    { letter: 'T', full: 'Tuesday', enabled: true },
+    { letter: 'W', full: 'Wednesday', enabled: true },
+    { letter: 'T', full: 'Thursday', enabled: true },
+    { letter: 'F', full: 'Friday', enabled: true },
+    { letter: 'S', full: 'Saturday', enabled: false }
+];
+
+const defaultSchedule = DAYS.reduce((acc, day) => ({
+    ...acc,
+    [day.full]: {
+        enabled: day.enabled,
+        timeSlots: [{ ...defaultTimeSlot }]
+    }
+}), {});
 
 export default function AvailabilityForm({ userId, initialSchedule }) {
-  const [schedule, setSchedule] = useState(initialSchedule || defaultSchedule);
-  const [isValid, setIsValid] = useState(false);
+    const [schedule, setSchedule] = useState(initialSchedule || defaultSchedule);
+    const [isValid, setIsValid] = useState(false);
 
-  useEffect(() => {
-    setIsValid(validateSchedule(schedule));
-  }, [schedule]);
+    useEffect(() => {
+        setIsValid(validateSchedule(schedule));
+    }, [schedule]);
 
-  const addTimeSlot = (day) => {
-    setSchedule(prev => ({
-      ...prev,
-      [day]: {
-        ...prev[day],
-        timeSlots: [...prev[day].timeSlots, { ...defaultTimeSlot }]
-      }
-    }));
-  };
+    const addTimeSlot = (day) => {
+        setSchedule(prev => ({
+            ...prev,
+            [day]: {
+                ...prev[day],
+                timeSlots: [...prev[day].timeSlots, { ...defaultTimeSlot }]
+            }
+        }));
+    };
 
-  const removeTimeSlot = (day, index) => {
-    setSchedule(prev => ({
-      ...prev,
-      [day]: {
-        ...prev[day],
-        timeSlots: prev[day].timeSlots.filter((_, i) => i !== index)
-      }
-    }));
-  };
+    const removeTimeSlot = (day, index) => {
+        console.log(index, "idx")
+        setSchedule(prev => ({
+            ...prev,
+            [day]: {
+                ...prev[day],
+                timeSlots: prev[day].timeSlots.filter((_, i) => i !== index)
+            }
+        }));
+    };
 
-  const updateTimeSlot = (day, index, field, value) => {
-    setSchedule(prev => ({
-      ...prev,
-      [day]: {
-        ...prev[day],
-        timeSlots: prev[day].timeSlots.map((slot, i) => 
-          i === index ? { ...slot, [field]: value } : slot
-        )
-      }
-    }));
-  };
+    const updateTimeSlot = (day, index, field, value) => {
+        setSchedule(prev => ({
+            ...prev,
+            [day]: {
+                ...prev[day],
+                timeSlots: prev[day].timeSlots.map((slot, i) =>
+                    i === index ? { ...slot, [field]: value } : slot
+                )
+            }
+        }));
+    };
 
-  const toggleDay = (day) => {
-    setSchedule(prev => ({
-      ...prev,
-      [day]: {
-        ...prev[day],
-        enabled: !prev[day].enabled
-      }
-    }));
-  };
+    const toggleDay = (dayName) => {
+        setSchedule(prev => ({
+            ...prev,
+            [dayName]: {
+                ...prev[dayName],
+                enabled: !prev[dayName].enabled
+            }
+        }));
+    };
 
-  const handleSave = async () => {
-    try {
-      await saveAvailability(userId, schedule);
-    } catch (error) {
-      alert('Failed to save schedule. Please check your inputs and try again.');
-    }
-  };
+    const handleSave = async () => {
+        try {
+            await saveAvailability(userId, schedule);
+        } catch (error) {
+            alert('Failed to save schedule. Please check your inputs and try again.');
+        }
+    };
 
-  return (
-    <div className="bg-white rounded-lg shadow-md p-6 max-w-4xl mx-auto">
-      <div className="space-y-6">
-        {Object.entries(schedule).map(([day, daySchedule]) => (
-          <div key={day} className="space-y-2">
-            <div className="flex items-center gap-4">
-              <input
-                type="checkbox"
-                checked={daySchedule.enabled}
-                onChange={() => toggleDay(day)}
-                className="w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-              />
-              {/* <span className="font-medium w-32 text-gray-700">{day}</span> */}
-            </div>
-            
-            {daySchedule.enabled && (
-              <div className="ml-8 space-y-2">
-                {daySchedule.timeSlots.map((slot, index) => (
-                  <div key={index} className="flex items-center gap-4">
-                    <input
-                      type="text"
-                      value={slot.start}
-                      onChange={(e) => updateTimeSlot(day, index, 'start', e.target.value)}
-                      className="w-24 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
-                      placeholder="9:00am"
-                    />
-                    <span className="text-gray-600">to</span>
-                    <input
-                      type="text"
-                      value={slot.end}
-                      onChange={(e) => updateTimeSlot(day, index, 'end', e.target.value)}
-                      className="w-24 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
-                      placeholder="5:00pm"
-                    />
+    return (
+        <div className="bg-white rounded-lg shadow-md p-6 max-w-xl mx-auto border border-black">
+            {/* Day Toggle Buttons */}
+            <div className="flex  gap-2 mb-8">
+                {DAYS.map((day) => (
                     <button
-                      onClick={() => removeTimeSlot(day, index)}
-                      disabled={daySchedule.timeSlots.length === 1}
-                      className="p-2 text-gray-500 hover:text-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                        key={`${day.letter}-${day.full}`}
+                        onClick={() => toggleDay(day.full)}
+                        className={`w-10 h-10 rounded-full flex items-center justify-center font-medium transition-colors
+              ${schedule[day.full].enabled
+                                ? 'bg-blue-600 text-white'
+                                : 'bg-gray-100 text-gray-500'}`}
                     >
-                      <Minus className="h-4 w-4" />
+                        {day.letter}
                     </button>
-                  </div>
+                ))}
+            </div>
+
+            {/* Schedule Form */}
+            <div className="space-y-6 flex flex-col justify-center">
+                {DAYS.map((day) => (
+                    schedule[day.full].enabled && (
+                        <div key={day.full} className="flex gap-4">
+                            <div className="font-semibold p-2 text-left text-gray-700 min-w-28">{day.full}</div>
+                            <div className="ml-4 space-y-2 flex">
+                                {schedule[day.full].timeSlots.map((slot, index) => (
+                                    <div key={index} className="flex items-center gap-4 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500">
+                                        <input
+                                            type="text"
+                                            value={slot.start}
+                                            onChange={(e) => updateTimeSlot(day.full, index, 'start', e.target.value)}
+                                            className="w-24 px-3 py-2"
+                                            placeholder="9:00am"
+                                        />
+                                        <span className="text-gray-600">to</span>
+                                        <input
+                                            type="text"
+                                            value={slot.end}
+                                            onChange={(e) => updateTimeSlot(day.full, index, 'end', e.target.value)}
+                                            className="w-24 px-3 py-2"
+                                            placeholder="5:00pm"
+                                        />
+
+                                    </div>
+                                ))}
+                                <button
+                                    onClick={() => addTimeSlot(day.full)}
+                                    className="mt-2 flex items-center text-sm text-blue-600 hover:text-blue-700"
+                                >
+                                    <Plus className="h-4 w-4 mr-1" />
+                                </button>
+                                <button
+                                    onClick={() => removeTimeSlot(day.full, index)}
+                                    disabled={schedule[day.full].timeSlots.length === 1}
+                                    className="p-2 text-gray-500 hover:text-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                                >
+                                    <Minus className="h-4 w-4" />
+                                </button>
+                            </div>
+                        </div>
+                    )
                 ))}
                 <button
-                  onClick={() => addTimeSlot(day)}
-                  className="mt-2 flex items-center text-sm text-blue-600 hover:text-blue-700"
+                    onClick={handleSave}
+                    disabled={!isValid}
+                    className="mt-6 max-w-36 flex items-center justify-center px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  <Plus className="h-4 w-4 mr-1" />
-                  Add Time Slot
+                    <Save className="h-4 w-4 mr-2" />
+                    Save Availability
                 </button>
-              </div>
-            )}
-          </div>
-        ))}
-        <button
-          onClick={handleSave}
-          disabled={!isValid}
-          className="mt-6 flex items-center px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          <Save className="h-4 w-4 mr-2" />
-          Save Availability
-        </button>
-      </div>
-    </div>
-  );
+            </div>
+        </div>
+    );
 }
